@@ -1,0 +1,45 @@
+﻿@inherits LayoutComponentBase
+@inject IJSRuntime JS
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+    <main>
+        <div class="top-row px-4">
+            <button class="btn btn-outline-secondary btn-sm" @onclick="ToggleTheme">
+                @(isDark ? "Switch to Light Mode" : "Switch to Dark Mode")
+            </button>
+        </div>
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+    private bool isDark = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Fetch saved theme from browser storage
+            var saved = await JS.InvokeAsync<string>("themeHelper.getTheme");
+            isDark = saved == "dark-mode";
+
+            // Apply theme to body
+            await JS.InvokeVoidAsync("themeHelper.setTheme", saved);
+
+            // Trigger UI update
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        isDark = !isDark;
+        var theme = isDark ? "dark-mode" : "light-mode";
+        await JS.InvokeVoidAsync("themeHelper.setTheme", theme);
+    }
+}
